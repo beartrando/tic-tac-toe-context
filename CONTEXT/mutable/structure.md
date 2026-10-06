@@ -2,7 +2,7 @@
 
 ```
 ├── services/            # приложения (см. services/CONTEXT)
-├── shared/              # библиотеки @shared/* (см. shared/CONTEXT)
+├── shared/              # библиотеки @shared/* (git-submodules; см. shared/CONTEXT)
 ├── proto/               # gRPC/protobuf-контракты (git-submodule)
 ├── context/             # репозитория контекста (git-submodule; сама CONTEXT-дерева не держит)
 ├── k8s/                 # манифесты Kubernetes: base/{infrastructure,services} + overlays/{production,local}

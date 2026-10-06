@@ -1,8 +1,13 @@
 # Architectural rules
 
 - **Git-submodules**: `services/{auth,battle,bot,engine,front,gateway,orchestration,profile,streaming}`,
-  `proto/` и `context/` — отдельные репозитории; правки в них коммитятся в свои
-  репозитории (`make git-commit-all`). `shared/` и `k8s/` — часть infra-репо.
+  `proto/`, `context/` и `shared/{logger,errors,kafka-manager,grpc-client-manager,
+  pg-boss-manager}` — отдельные репозитории; правки в них коммитятся в свои
+  репозитории (`make git-commit-all`). `k8s/` — часть infra-репо.
+- **Shared-пакеты**: репозитории `@shared/*` общие с lenvora (`beartrando/logger`,
+  `errors`, `kafka-manager`, `grpc-client-manager`, `pg-boss-manager`), в монорепе
+  подключены сабмодулями и резолвятся только через корневые `overrides`
+  (`workspace:*`); правка в shared-пакете задевает оба проекта.
 - **Топология dev-запуска** (сеть `backend`): наружу публикуются gateway `9090`,
   streaming `8080`, kafka `9092`, postgres `5432`; остальное — только внутри сети.
   Доступ к БД — через `pgbouncer` (6432), Redis используют engine и orchestration.
