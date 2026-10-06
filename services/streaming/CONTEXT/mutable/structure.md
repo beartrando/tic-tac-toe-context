@@ -8,4 +8,7 @@
   `handlers/` (`battle.service.ts`, `profile.service.ts` — фактически закомментированы,
   мёртвый код), `health`.
 - `src/infrastructure/{state-store,timer}/` — состояние WS-сессий и таймеры.
+- `src/infrastructure/battle-timeout/` — трекер активности по битвам + периодический
+  опрос battle о простаивающих битвах (`BATTLE_IDLE_TIMEOUT_SECONDS`,
+  `BATTLE_POLL_INTERVAL_SECONDS`).
 - `src/engine/config/` — конфиг подключения к engine; `src/application/use-cases/`.
