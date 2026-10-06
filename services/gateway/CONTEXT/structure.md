@@ -7,4 +7,4 @@
   `clients/orchestration.client.ts` — прокси-вызов.
 - `src/infrastructure/grpc/config/microservices.config.ts` — карта `SERVICE_*_URL`.
 - `src/application/use-cases/health/` — `health`, `full-health`, `status`, `livez`,
-  `readyz` (+ тесты в `__tests__/`, фактически заглушки `.keep`).
+  `readyz`.

@@ -9,5 +9,4 @@
 - Кеш/состояние: `infrastructure/cache/` (Redis, ioredis) и `infrastructure/state-store/`.
 - Kafka: consume `battle.matched`; produce `engine.battle_updated`,
   `engine.battle_started`, `engine.battle_finished`.
-- Use-cases: `application/use-cases/engine/*`, `health/*`; тесты
-  `__tests__/functional/src/service/battle.service.test.ts`.
+- Use-cases: `application/use-cases/engine/*`, `health/*`.

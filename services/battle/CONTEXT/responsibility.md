@@ -6,4 +6,3 @@
 - Produce `battle.matched` (матчинг найден) → consume engine'овских
   `engine.battle_updated` / терминации битвы.
 - Use-cases: `application/use-cases/battle/*`, `health/*`.
-- Тесты: `__tests__/functional/src/service/battle.service.test.ts`.

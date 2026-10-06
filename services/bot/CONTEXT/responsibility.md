@@ -7,4 +7,5 @@
 - Use-cases: `application/use-cases/{auth,profile,battle,health}`; `state-store/` —
   локальное состояние игры бота.
 - gRPC `Health` на `:50051`; Prisma-датасource без моделей (под pg-boss).
-- Тесты: `__tests__/functional/battle.test.ts`.
+- Тесты — **исключение** в проекте: единственные, что вынесены из дерева исходников
+  (не коллокейтед; правило — в [services/](../../CONTEXT/purpose.md)).
