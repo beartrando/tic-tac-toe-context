@@ -1,8 +1,9 @@
 # Git workflow
 
-Флоу **одинаков для всех репозиториев проекта**: infra-монорепо, каждый сервис, `proto/`
-и `context/`. Базовая ветка везде — `dev`. Мультирепо-команды (см. `make/git.mk`)
-обходят `GIT_SERVICES` (сервисы), `GIT_EXTRA_REPOS` (`proto`, `context`) и сам монорепо:
+Флоу **одинаков для всех репозиториев проекта**: infra-монорепо, каждый сервис, `proto/`,
+`context/` и `shared/*`. Базовая ветка везде — `dev`. Мультирепо-команды (см. `make/git.mk`)
+обходят `GIT_SERVICES` (сервисы), `GIT_EXTRA_REPOS` (`proto`, `context`, `shared/*`) и сам
+монорепо:
 `make git-commit-all`, `make git-push-all`, `make git-pull-all`.
 
 Перед началом любой работы обязательно создать feature-ветку от актуального `dev`.
