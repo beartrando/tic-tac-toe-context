@@ -21,3 +21,7 @@
   streaming (тикет #59). Существующий `Get` в этом же тикете исправлен: он собирал
   `BattleResponse` при контракте `BattlesResponse` (клиент получал `{}`), теперь
   отвечает `BattlesResponse{battles.items:[…]}`.
+- Тесты — **колокейтед**: `src/**\/*.test.ts` рядом с кодом, `jest.config.js`
+  (`testMatch: **\/src\/*.test.ts`). `tsconfig.json` исключает `*.test.ts` из сборки
+  (иначе `tsc -p tsconfig.json` тянет тесты в `dist`), типизация тестов — через
+  `tsconfig.test.json`; в Dockerfile тесты копируются вместе с `src/`.

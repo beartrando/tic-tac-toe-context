@@ -12,3 +12,7 @@
   сбрасывают простой и убирают битву из опроса. Механика — engine-ский `TimerService`
   (ключ — battleId), а не `setInterval`/отдельный трекер. Новые статусы добавляются
   согласованно в `domain/battle/enums` + proto-маппер (`isTerminated()`).
+- Тесты — **колокейтед**: `src/**\/*.test.ts` рядом с кодом, `jest.config.js`
+  (`testMatch: **\/src\/*.test.ts`). `tsconfig.json` исключает `*.test.ts` из сборки,
+  типизация тестов — через `tsconfig.test.json`; в Dockerfile тесты копируются вместе
+  с `src/`.
