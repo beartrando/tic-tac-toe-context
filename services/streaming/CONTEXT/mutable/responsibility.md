@@ -9,5 +9,11 @@
   (`infrastructure/grpc/configs/grpc.config.ts`).
 - Produce Kafka-события `bot.connecting-request` — просьба подключить
   [../../bot/](../../bot/CONTEXT/purpose.md) к битве.
+- **Таймаут простоя битвы** (`infrastructure/battle-timeout/`): трекер активности
+  (`battle-activity.tracker.ts`, входящие WS-пакеты + исходящие
+  `BattleWebsocketSender.send`) и опрос battle (`BattleTimeoutPollService`): после
+  `BATTLE_IDLE_TIMEOUT_SECONDS` (180) простоя по битве опрос идёт каждые
+  `BATTLE_POLL_INTERVAL_SECONDS` (10) через gRPC `GetMany`; на терминальный статус —
+  push `BattleResponse` клиентам → `unsubscribeBattle` → выход из опроса.
 - Use-cases: `application/use-cases/{auth,battle,websocket,health}`; Prisma-датасource
   без моделей (под pg-boss); `state-store/`, `timer/`.

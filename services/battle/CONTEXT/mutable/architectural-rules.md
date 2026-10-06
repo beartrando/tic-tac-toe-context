@@ -5,3 +5,16 @@
   `engine.battle_terminated` — до выравнивания значений консьюмер engine-событий
   не получает терминации. Любая правка топиков — согласованно в обоих `.env.dist`.
 - Миграции `Battle`-модели — только здесь (`make migrate service=battle`).
+- **`TimeOut` по таймауту**: если статус не менялся `BATTLE_STATUS_TIMEOUT_SECONDS` (180 с)
+  и он не финальный (`Finished`/`Cancelled`/`TimeOut`), битва переводится в `TimeOut` и
+  публикуется `battle.timeout`. Основание — `updated_at` (бампается **любым** save, в т.ч.
+  join/init), т.е. активность = любой save; решение зафиксировано в тикете #59.
+  Sweep идёт каждые `BATTLE_TIMEOUT_SWEEP_SECONDS` (10 с) и переживает рестарты сервиса.
+- Изменение enum `BattleStatus` (`TimeOut` добавлен в domain/prisma/proto) требует
+  согласованной правки трёх мапперов (`db/mappers/battle/status.mapper.ts`,
+  `grpc/mappers/battle/battle-status.proto.mapper.ts`, `proto/battle.proto`).
+- **Ожидаемо**: первый sweep после простоя (деплой/выклченный сервис) переведёт в `TimeOut`
+  все исторические не-финальные битвы → массовый переход и пачка `battle.timeout`.
+- Контракт `GetMany(BattleIdsRequest) → BattlesResponse` добавлен для опроса со стороны
+  streaming (тикет #59); существующий `Get` имеет известный баг (собирает `BattleResponse`
+  вместо `BattlesResponse`) и в этом тикете не чинился.
