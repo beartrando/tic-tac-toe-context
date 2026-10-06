@@ -9,12 +9,15 @@
   и он не финальный (`Finished`/`Cancelled`/`TimeOut`), битва переводится в `TimeOut` и
   публикуется `battle.timeout`. Основание — `updated_at` (бампается **любым** save, в т.ч.
   join/init), т.е. активность = любой save; решение зафиксировано в тикете #59.
-  Sweep идёт каждые `BATTLE_TIMEOUT_SWEEP_SECONDS` (10 с) и переживает рестарты сервиса.
+- Sweep идёт каждые `BATTLE_TIMEOUT_SWEEP_SECONDS` (10 с): `Application` стартует
+  engine-ский `TimerService` под фиксированным ключом, колбэк прогоняет sweep и
+  перевооружает таймер — так периодичность переживает рестарты сервиса.
 - Изменение enum `BattleStatus` (`TimeOut` добавлен в domain/prisma/proto) требует
   согласованной правки трёх мапперов (`db/mappers/battle/status.mapper.ts`,
   `grpc/mappers/battle/battle-status.proto.mapper.ts`, `proto/battle.proto`).
 - **Ожидаемо**: первый sweep после простоя (деплой/выклченный сервис) переведёт в `TimeOut`
   все исторические не-финальные битвы → массовый переход и пачка `battle.timeout`.
 - Контракт `GetMany(BattleIdsRequest) → BattlesResponse` добавлен для опроса со стороны
-  streaming (тикет #59); существующий `Get` имеет известный баг (собирает `BattleResponse`
-  вместо `BattlesResponse`) и в этом тикете не чинился.
+  streaming (тикет #59). Существующий `Get` в этом же тикете исправлен: он собирал
+  `BattleResponse` при контракте `BattlesResponse` (клиент получал `{}`), теперь
+  отвечает `BattlesResponse{battles.items:[…]}`.
