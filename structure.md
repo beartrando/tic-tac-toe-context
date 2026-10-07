@@ -2,69 +2,115 @@
 
 ## Project Overview
 
-Distributed tic-tac-toe game with microservices architecture. The project uses a monorepo structure managed with pnpm and gRPC for inter-service communication.
+Distributed tic-tac-toe game with microservices architecture. The project uses a monorepo structure managed with pnpm and gRPC for inter-service communication. All services are typed with TypeScript and use InversifyJS for dependency injection.
 
-### Services
+### Core Services (9 total)
 
-| Service | Purpose |
-|---------|---------|
-| **gateway** | Entry point for external requests, handles routing and proxying to other services |
-| **auth** | Authentication and authorization (anonymous sign-in, token refresh, user retrieval) |
-| **profile** | User profile management (get, get-or-create, get by user) |
-| **orchestration** | Proxy service for generic method routing |
-| **battle** | Tic-tac-toe game logic (create battles, make moves, leave, get battle state) |
-| **streaming** | WebSocket-based real-time communication for battle events |
-| **pgbouncer** | Connection pooler for PostgreSQL |
-| **redis** | Cache and pub/sub system |
-| **kafka** | Message broker for asynchronous events |
-| **bot** | Bot service for AI opponents |
+| Service | Purpose | Key Dependencies |
+|---------|---------|------------------|
+| **gateway** | HTTP entry point, request routing, proxy to internal services | `@shared/logger`, `@shared/errors`, grpc clients, orchestration client |
+| **auth** | Authentication, authorization, token management, user sessions | Prisma, `@shared/logger`, `@shared/errors`, `@shared/kafka-manager`, `@shared/pg-boss-manager`, `@shared/grpc-client-manager` |
+| **profile** | User profile management, ratings, levels, statistics | Prisma, auth service, `@shared/logger`, `@shared/kafka-manager` |
+| **orchestration** | Generic method routing proxy, proxy-controller for gateway | `@shared/logger`, `@shared/errors`, db, message, job services |
+| **battle** | Tic-tac-toe game logic, state management, moves, matching, timeout | Prisma, auth, profile, `@shared/logger`, `@shared/kafka-manager`, `@shared/pg-boss-manager`, timer service, websocket |
+| **streaming** | WebSocket real-time communication, battle event broadcasting | auth service, profile service, battle service, timer, grpc-stream, websocket server |
+| **engine** | Domain-level battle logic, domain events, battle domain model | battle service, cache, state-store, auth, profile, `@shared/logger` |
+| **pgbouncer** | PostgreSQL connection pooling | - |
+| **redis** | Cache, pub/sub for distributed events | - |
+| **kafka** | Message broker for async events (battle state changes, user created) | - |
+| **bot** | AI opponent logic, move generation, battle simulation | battle service, profile service, auth, `@shared/logger` |
+
+### Shared Modules
+
+| Module | Purpose |
+|--------|---------|
+| **@shared/logger** | Structured logging using winston/pino |
+| **@shared/errors** | Custom error types and handling |
+| **@shared/kafka-manager** | Kafka producer/consumer wrappers |
+| **@shared/grpc-client-manager** | gRPC client creation and management |
+| **@shared/pg-boss-manager** | Job queue management using pg-boss |
+| **@shared/pg-boss-manager** | PostgreSQL-based job scheduling |
 
 ### API Contracts (gRPC)
 
 Services communicate via Protocol Buffers defined in `infra/proto/`:
 
-- **auth.proto**: `Logout`, `RefreshTokens`, `AnonymousSignIn`, `Get`
-- **battle.proto**: `Get`, `GetMany`, `Init`, `Leave`
-- **profile.proto**: `GetByUser`, `Get`, `GetOrCreate`
-- **orchestration.proto**: `Proxy` (generic method routing)
-- **streaming.proto**: WebSocket battle events (`BattleInit`, `BattleStart`, `BattleMove`, `BattleLeave`, `BattleJoinBot`)
+**auth.proto**:
+- `Auth.service`: `Logout`, `RefreshTokens`, `AnonymousSignIn`, `Get`
 
-### Technology Stack
+**battle.proto**:
+- `Battle.service`: `Get`, `GetMany`, `Init`, `Leave`
+- Enums: `BattleCellValue` (CELL_EMPTY=0, CELL_X=1, CELL_O=2), `BattleStatus`
+- Messages: `BattleObject`, `BattleInitRequest`, `BattleLeaveRequest`, `BattleIdsRequest`
 
-- **Language**: TypeScript
-- **Runtime**: Node.js
-- **Dependency Injection**: InversifyJS (implied by composition roots)
-- **Protobuf**: gRPC communication
-- **Monorepo**: pnpm workspaces
-- **Containerization**: Docker + Docker Compose
-- **Kubernetes**: Deployment manifests in `infra/k8s/`
+**profile.proto**:
+- `Profile.service`: `GetByUser`, `Get`, `GetOrCreate`
+- Messages: `ProfileObject` (id, user_id, nickname, level, rating, experience, created_at, updated_at)
 
-### Key Documentation
+**orchestration.proto**:
+- `Orchestration.service`: `Proxy` (generic method routing via method name + path + headers + query + body)
 
-- `infra/wiki/context.md` - Working context guidelines
-- `infra/wiki/git-workflow.md` - Git branching model
-- `infra/wiki/livecycle.md` - Ticket lifecycle
+**streaming.proto**:
+- `Streaming.service`: WebSocket battle events (`BattleInit`, `BattleStart`, `BattleMove`, `BattleLeave`, `BattleJoinBot`)
+- Messages: `BattleRequest` (oneof input: init, start, move, ping, leave, connect_bot), `BattleResponse` (oneof output: battle, ping, error)
 
-### Git Workflow
+### Infrastructure
 
-1. Ensure `dev` branch is up-to-date and working tree is clean
-2. Create feature branch: `feature-<hash>--<human_name>`
-3. Work exclusively in the feature branch
-4. Upon completion:
-   - Run all necessary tests and checks
-   - Push feature branch to remote
-   - Create Pull Request: `feature-<hash>--<human_name>` → `dev`
-   - Switch repositories back to `dev` branch
-5. PR rules:
-   - Always target `dev`
-   - Include links to task PR in all status messages
-   - Do not merge PRs manually
+- **PostgreSQL**: Primary data source via Prisma ORM
+- **Redis**: Cache and pub/sub for real-time events
+- **Kafka**: Asynchronous event propagation (battle updated, user created, battle terminated)
+- **pgbouncer**: Connection pooler between services and PostgreSQL
+- **Docker**: Containerization for all services
+- **Kubernetes**: Deployment and orchestration
 
-### Ticket Lifecycle
+### Project Structure (Monorepo)
 
-Project board columns: `Todo`, `In Progress`, `Clarification`, `Review`
+```
+infra/
+├─ proto/                    # gRPC proto definitions
+├─ services/                 # Microservices (11 services + bot)
+│  ├─ auth/                  # Auth service
+│  ├─ battle/                # Battle service
+│  ├─ engine/                # Engine domain service
+│  ├─ profile/               # Profile service
+│  ├─ gateway/               # Gateway service
+│  ├─ orchestration/         # Orchestration proxy
+│  ├─ streaming/             # WebSocket streaming
+│  ├─ bot/                   # Bot AI service
+│  ├─ pgbouncer/             # Connection pooler
+│  ├─ redis/                 # Cache service
+│  ├─ kafka/                 # Message broker
+│  └─ shared/                # Shared modules
+│     ├─ logger/             # Logging
+│     ├─ errors/             # Error types
+│     ├─ kafka-manager/      # Kafka wrappers
+│     ├─ grpc-client-manager/ # gRPC client manager
+│     └─ pg-boss-manager/    # Job queue manager
+├─ wiki/                     # Documentation wiki
+├─ context/                  # Single source of truth for project context
+├─ k8s/                      # Kubernetes manifests
+├─ docker-compose*.yml       # Docker configurations
+├─ package.json              # Root package config
+└─ pnpm-workspace.yaml       # Workspace configuration
+```
 
-- DevOrc only works with tickets in `Todo` column
-- Getting a ticket: Find in `Todo`, move to `In Progress`, load ticket context
-- Each iteration executes a piece of work and determines next ticket state
-- Completion: Verify checks passed, create PR to `dev`, add PR links to ticket, move to `Review`
+### Key Integration Points
+
+1. **gateway ↔ services**: Via gRPC (internal) and HTTP (external)
+2. **gateway ↔ orchestration**: Proxy routing for arbitrary method calls
+3. **battle ↔ engine**: Domain logic separation (battle = state mgmt, engine = domain rules)
+4. **battle ↔ streaming**: Real-time WebSocket event broadcasting
+5. **battle ↔ kafka**: Async events (battle initialized, moved, terminated, timeout)
+6. **profile ↔ auth**: User authentication and profile association
+7. **bot ↔ battle/profile**: AI opponent integration
+8. **All services ↔ shared/***: Common utilities (logger, errors, kafka-manager, grpc-client-manager, pg-boss-manager)
+9. **Services ↔ PostgreSQL**: Via Prisma ORM through pgbouncer pool
+10. **Services ↔ Redis**: For caching and pub/sub
+
+### Development Commands
+
+- `pnpm build` - Build all services
+- `pnpm dev` - Start development mode with turbopack/watcher
+- `make git-pull-all` - Pull all repositories from dev branch
+- `make git-commit-and-push-all` - Commit and push all changed repos
+- Per-service: `pnpm build` in each service directory
