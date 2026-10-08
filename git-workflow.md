@@ -9,6 +9,7 @@ feature-<hash>--<human_name>
 ```
 
 Where:
+
 - `<hash>` — unique short identifier of the work
 - `<human_name>` — short human-readable task name in kebab-case
 
@@ -20,10 +21,10 @@ Where:
 3. Work exclusively in the feature branch
 4. Push feature branch to remote
 5. Upon completion:
-   - Run all necessary tests and checks
-   - Push feature branch to remote
-   - Create Pull Request: `feature-<hash>--<human_name>` → `dev`
-   - Switch repositories back to `dev` branch
+    - Run all necessary tests and checks
+    - Push feature branch to remote
+    - Create Pull Request: `feature-<hash>--<human_name>` → `dev`
+    - Switch repositories back to `dev` branch
 
 ### PR Rules
 

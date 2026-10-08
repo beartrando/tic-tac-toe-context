@@ -76,7 +76,9 @@ shared/pg-boss-manager
 
 #### Request/Response Pattern
 ```
+
 Client → gateway (HTTP) → orchestration (Proxy) → target service (gRPC) → response
+
 ```
 - gateway handles HTTP → gRPC translation
 - orchestration handles generic method routing
@@ -85,7 +87,9 @@ Client → gateway (HTTP) → orchestration (Proxy) → target service (gRPC) �
 
 #### Event-Driven Pattern (Kafka)
 ```
+
 Service A (producer) → @shared/kafka-manager → Kafka topic → @shared/kafka-manager → Service B (consumer)
+
 ```
 - Battle state changes → `battle.updated` topic
 - User created events → `user.created` topic
@@ -94,7 +98,9 @@ Service A (producer) → @shared/kafka-manager → Kafka topic → @shared/kafka
 
 #### Cache Pattern (Redis)
 ```
+
 Service → Redis → Cache → Service (fast read)
+
 ```
 - Battle state caching for quick access
 - Profile data caching (rating, level)
@@ -103,7 +109,9 @@ Service → Redis → Cache → Service (fast read)
 
 #### Connection Pooling (pgbouncer)
 ```
+
 Service → pgbouncer → PostgreSQL
+
 ```
 - All service DB connections go through pgbouncer
 - Reduces connection overhead
@@ -113,15 +121,16 @@ Service → pgbouncer → PostgreSQL
 ### Cross-Service Dependency Graph
 
 ```
+
 graph TD
-    subgraph "Foundation"
-        direction(LR)
-        shared/logger[shared/logger]
-        shared/errors[shared/errors]
-        shared/kafka-manager[shared/kafka-manager]
-        shared/grpc-client-manager[shared/grpc-client-manager]
-        shared/pg-boss-manager[shared/pg-boss-manager]
-    end
+subgraph "Foundation"
+direction(LR)
+shared/logger[shared/logger]
+shared/errors[shared/errors]
+shared/kafka-manager[shared/kafka-manager]
+shared/grpc-client-manager[shared/grpc-client-manager]
+shared/pg-boss-manager[shared/pg-boss-manager]
+end
 
     subgraph "Services"
         direction(LR)
@@ -169,6 +178,7 @@ graph TD
         orchestration --> shared/pg-boss-manager
         battle --> shared/pg-boss-manager
         matchmaking --> shared/pg-boss-manager
+
 ```
 
 ### Import Restrictions (Enforced)
@@ -194,9 +204,11 @@ graph TD
 ### Configuration-Dependency Relationship
 
 ```
+
 service/config/ → service/infrastructure/ → service/repos/ → service/domain/ → service/application/
-                                     ↓
-                               service/infrastructure/grpc/
+↓
+service/infrastructure/grpc/
+
 ```
 
 - Config files are the entry point, downward dependency

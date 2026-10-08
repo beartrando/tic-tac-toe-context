@@ -2,9 +2,11 @@
 
 ## Tic-Tac-Toe Project
 
-Distributed tic-tac-toe game built with a microservices architecture using gRPC for inter-service communication. The project uses a monorepo structure managed with pnpm.
+Distributed tic-tac-toe game built with a microservices architecture using gRPC for inter-service communication. The
+project uses a monorepo structure managed with pnpm.
 
 **Architecture**: Write/Read model separation (CQRS-like) for battle domain:
+
 - **matchmaking** (write model) — battle creation, matchmaking, join, publishes `matchmaking.matched`
 - **battle** (read model) — Get, GetMany, TimeoutSweep, consumes `battle.updated`/`battle.terminated`
 
