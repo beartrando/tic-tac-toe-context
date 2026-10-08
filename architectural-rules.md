@@ -53,7 +53,8 @@
 ### 6. Service Responsibility Boundaries (Detailed)
 - **auth**: Authentication, authorization, tokens, sessions, device management
 - **profile**: User profiles, ratings, levels, statistics, nickname management
-- **battle**: Game state, moves, matchmaking, win/draw detection, timeout handling
+- **matchmaking**: Battle creation, matchmaking, join logic, publishes `matchmaking.matched` event (write model)
+- **battle**: Battle history/read model: Get, GetMany, TimeoutSweep, consumes `battle.updated`/`battle.terminated` (read model)
 - **streaming**: WebSocket events, battle real-time updates, bot connection management
 - **orchestration**: Method routing, proxy functionality, proxy-controller for gateway
 - **gateway**: External API entry point, request routing, health checks
@@ -164,6 +165,14 @@
 - **Anti-pattern**: Moving tests out of `.spec.ts` location
 - **Fix**: Keep `.spec.ts` alongside `.ts`, battle tests in `src` are exception
 - **Rule update** (commit 963c3df): "update architectural rules: .test.ts -> .spec.ts and tsconfig.test.json -> tsconfig.spec.json"
+
+### 10. Write/Read Model Separation (CQRS-like)
+- **Pattern**: Split write-heavy and read-heavy operations into separate services
+- **Example**: `matchmaking` (write model) handles battle creation/join, publishes events
+- **Example**: `battle` (read model) handles Get/GetMany, consumes events for read replica
+- **Benefits**: Independent scaling, separate databases, clear responsibility boundaries
+- **Implementation**: Each service has own Prisma schema and PostgreSQL database
+- **Communication**: Async via Kafka events (`matchmaking.matched` → `battle.updated`/`battle.terminated`)
 
 ## Enforcement Mechanisms
 

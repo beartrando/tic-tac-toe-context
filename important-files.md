@@ -94,7 +94,8 @@ Each service has its own configuration directory:
 | `infra/proto/common/key_value.proto` | `common.key_value` | `KeyValue` message for headers/query_params |
 | `infra/proto/common/ping.proto` | `common.ping` | `Ping` message for WebSocket keep-alive |
 | `infra/proto/auth.proto` | `auth` | Auth service gRPC contracts (Logout, RefreshTokens, etc.) |
-| `infra/proto/battle.proto` | `battle` | Battle service gRPC contracts + enums/messages |
+| `infra/proto/matchmaking.proto` | `matchmaking` | Matchmaking service gRPC contracts (Init) |
+| `infra/proto/battle.proto` | `battle` | Battle service gRPC contracts (Get, GetMany) + enums/messages |
 | `infra/proto/profile.proto` | `profile` | Profile service gRPC contracts |
 | `infra/proto/orchestration.proto` | `orchestration` | Generic method routing Proxy service |
 | `infra/proto/streaming.proto` | `streaming` | WebSocket battle events and messages |
@@ -162,6 +163,17 @@ infra/services/{service}/
 ├── nodemon.json        # Dev server config
 └── Dockerfile          # Container definition
 ```
+
+**matchmaking service** (write model):
+- `src/domain/matchmaking/` — BattleEntity, VOs (BattleId, BattleStatus, Board, PlayerIds)
+- `src/application/use-cases/matchmaking/init.ts` — Init use case (create/join)
+- `src/infrastructure/db/repositories/prisma-battle.repository.ts` — Write repo
+- `src/infrastructure/message/producers/` — Kafka producer for `matchmaking.matched`
+
+**battle service** (read model):
+- `src/application/use-cases/battle/` — Get, GetMany, TimeoutSweep, Terminate
+- `src/infrastructure/message/consumers/` — Kafka consumers for `battle.updated`, `battle.terminated`
+- `src/infrastructure/db/repositories/prisma-battle.repository.ts` — Read repo
 
 ### Build Artifacts
 

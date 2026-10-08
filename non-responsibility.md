@@ -24,17 +24,38 @@
   - Engine domain rules (handled by engine service)
   - User authentication state
   - Profile nickname or level management
+  - **Battle creation and matching** (handled by matchmaking service)
+  - **Move validation and processing** (handled by engine service)
+  - **Win/draw detection** (handled by engine service)
+
+### matchmaking Service
+
+- **NOT responsible for**:
+  - Authentication/authorization (handled by auth service)
+  - User profile management (handled by profile service)
+  - WebSocket connection management (handled by streaming service)
+  - Player rating calculations (handled by profile)
+  - AI opponent move generation (handled by bot)
+  - Engine domain rules (handled by engine service)
+  - User authentication state
+  - Profile nickname or level management
+  - **Battle history/read operations** (handled by battle service)
+  - **Move validation and processing** (handled by engine service)
+  - **Win/draw detection** (handled by engine service)
+  - **Battle timeout sweep** (handled by battle service)
+  - **Real-time WebSocket events** (handled by streaming service)
 
 ### engine Service
 
 - **NOT responsible for**:
-  - Database persistence (handled by battle's Prisma repositories)
-  - gRPC API contracts (handled by battle.proto)
+  - Database persistence (handled by battle's Prisma repositories for read model)
+  - gRPC API contracts (handled by battle.proto / matchmaking.proto)
   - WebSocket communication (handled by streaming)
   - User authentication (handled by auth)
   - Profile data retrieval (handled by profile)
-  - Battle state storage (handled by battle service with Prisma)
+  - **Battle state storage** (handled by battle service with Prisma for read model, matchmaking for write model)
   - Move validation at API level (handled by battle domain)
+  - **Battle creation/matching** (handled by matchmaking service)
 
 ### profile Service
 
@@ -50,13 +71,14 @@
 ### streaming Service
 
 - **NOT responsible for**:
-  - Game logic or battle state (handled by battle + engine)
+  - Game logic or battle state (handled by engine + battle read model)
   - Authentication (handled by auth service)
   - Profile data management (handled by profile service)
-  - Move validation (handled by battle)
+  - Move validation (handled by engine)
   - WebSocket connection establishment beyond battle events
   - Bot AI logic (handled by bot)
-  - Battle creation or initialization
+  - **Battle creation or initialization** (handled by matchmaking service)
+  - **Battle history/read operations** (handled by battle service)
 
 ### gateway Service
 
@@ -73,10 +95,10 @@
 
 - **NOT responsible for**:
   - Authentication or user management
-  - Game state persistence (handled by battle)
+  - Game state persistence (handled by battle read model)
   - Real-time WebSocket connections beyond bot moves (handled by streaming)
   - Profile data (handled by profile)
-  - Battle creation (handled by battle)
+  - **Battle creation** (handled by matchmaking service)
   - Move validation at domain level (handled by engine)
   - User session tracking
 

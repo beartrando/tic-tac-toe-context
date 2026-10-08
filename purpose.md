@@ -26,9 +26,9 @@ Provide a distributed, real-time tic-tac-toe game platform with microservices ar
    - Statistics tracking (wins, losses, draws)
 
 4. **Ensure reliable game state** through distributed data stores
-   - PostgreSQL as the source of truth for battle profiles
-   - Redis for real-time battle state caching
-   - Kafka for asynchronous event propagation
+   - PostgreSQL as the source of truth (separate DBs per service: matchmaking write, battle read)
+   - Redis for real-time battle state caching (engine)
+   - Kafka for asynchronous event propagation (matchmaking.matched, battle.updated, battle.terminated)
    - pgbouncer for connection pooling
 
 5. **Provide AI opponent** functionality through the bot service

@@ -4,7 +4,7 @@
 
 Distributed tic-tac-toe game with microservices architecture. The project uses a monorepo structure managed with pnpm and gRPC for inter-service communication. All services are typed with TypeScript and use InversifyJS for dependency injection.
 
-### Core Services (9 total)
+### Core Services (10 total)
 
 | Service | Purpose | Key Dependencies |
 |---------|---------|------------------|
@@ -12,8 +12,9 @@ Distributed tic-tac-toe game with microservices architecture. The project uses a
 | **auth** | Authentication, authorization, token management, user sessions | Prisma, `@shared/logger`, `@shared/errors`, `@shared/kafka-manager`, `@shared/pg-boss-manager`, `@shared/grpc-client-manager` |
 | **profile** | User profile management, ratings, levels, statistics | Prisma, auth service, `@shared/logger`, `@shared/kafka-manager` |
 | **orchestration** | Generic method routing proxy, proxy-controller for gateway | `@shared/logger`, `@shared/errors`, db, message, job services |
-| **battle** | Tic-tac-toe game logic, state management, moves, matching, timeout | Prisma, auth, profile, `@shared/logger`, `@shared/kafka-manager`, `@shared/pg-boss-manager`, timer service, websocket |
-| **streaming** | WebSocket real-time communication, battle event broadcasting | auth service, profile service, battle service, timer, grpc-stream, websocket server |
+| **matchmaking** | Battle creation, matchmaking, join logic, publishes matchmaking.matched event | Prisma, `@shared/logger`, `@shared/errors`, `@shared/kafka-manager`, `@shared/pg-boss-manager`, timer service |
+| **battle** | Battle history/read model: Get, GetMany, TimeoutSweep, consumes battle.updated/terminated | Prisma, `@shared/logger`, `@shared/errors`, `@shared/kafka-manager`, `@shared/pg-boss-manager` |
+| **streaming** | WebSocket real-time communication, battle event broadcasting | auth service, profile service, matchmaking service, battle service, timer, grpc-stream, websocket server |
 | **engine** | Domain-level battle logic, domain events, battle domain model | battle service, cache, state-store, auth, profile, `@shared/logger` |
 | **pgbouncer** | PostgreSQL connection pooling | - |
 | **redis** | Cache, pub/sub for distributed events | - |
@@ -38,10 +39,15 @@ Services communicate via Protocol Buffers defined in `infra/proto/`:
 **auth.proto**:
 - `Auth.service`: `Logout`, `RefreshTokens`, `AnonymousSignIn`, `Get`
 
+**matchmaking.proto**:
+- `Matchmaking.service`: `Init`
+- Messages: `MatchmakingInitRequest`, `MatchmakingResponse`
+- Reuses enums/messages from `battle.proto` (`BattleObject`, `BattleCellValue`, `BattleStatus`)
+
 **battle.proto**:
-- `Battle.service`: `Get`, `GetMany`, `Init`, `Leave`
+- `Battle.service`: `Get`, `GetMany`
 - Enums: `BattleCellValue` (CELL_EMPTY=0, CELL_X=1, CELL_O=2), `BattleStatus`
-- Messages: `BattleObject`, `BattleInitRequest`, `BattleLeaveRequest`, `BattleIdsRequest`
+- Messages: `BattleObject`, `BattleIdsRequest`, `BattleIdRequest`
 
 **profile.proto**:
 - `Profile.service`: `GetByUser`, `Get`, `GetOrCreate`
@@ -70,7 +76,8 @@ infra/
 ├─ proto/                    # gRPC proto definitions
 ├─ services/                 # Microservices (11 services + bot)
 │  ├─ auth/                  # Auth service
-│  ├─ battle/                # Battle service
+│  ├─ matchmaking/           # Matchmaking service (battle creation/join)
+│  ├─ battle/                # Battle history/read service
 │  ├─ engine/                # Engine domain service
 │  ├─ profile/               # Profile service
 │  ├─ gateway/               # Gateway service
@@ -98,14 +105,17 @@ infra/
 
 1. **gateway ↔ services**: Via gRPC (internal) and HTTP (external)
 2. **gateway ↔ orchestration**: Proxy routing for arbitrary method calls
-3. **battle ↔ engine**: Domain logic separation (battle = state mgmt, engine = domain rules)
-4. **battle ↔ streaming**: Real-time WebSocket event broadcasting
-5. **battle ↔ kafka**: Async events (battle initialized, moved, terminated, timeout)
-6. **profile ↔ auth**: User authentication and profile association
-7. **bot ↔ battle/profile**: AI opponent integration
-8. **All services ↔ shared/***: Common utilities (logger, errors, kafka-manager, grpc-client-manager, pg-boss-manager)
-9. **Services ↔ PostgreSQL**: Via Prisma ORM through pgbouncer pool
-10. **Services ↔ Redis**: For caching and pub/sub
+3. **matchmaking ↔ engine**: matchmaking publishes `matchmaking.matched` → engine consumes via Kafka
+4. **battle ↔ engine**: battle consumes `battle.updated`, `battle.terminated` from engine
+5. **battle ↔ streaming**: Real-time WebSocket event broadcasting (read model)
+6. **battle ↔ kafka**: Async events consumer (battle updated, terminated, timeout)
+7. **matchmaking ↔ kafka**: Async events producer (matchmaking.matched)
+8. **profile ↔ auth**: User authentication and profile association
+9. **bot ↔ battle/profile**: AI opponent integration
+10. **streaming ↔ matchmaking/battle**: Init/Join via matchmaking, Get/GetMany via battle
+11. **All services ↔ shared/***: Common utilities (logger, errors, kafka-manager, grpc-client-manager, pg-boss-manager)
+12. **Services ↔ PostgreSQL**: Via Prisma ORM through pgbouncer pool (each service has own DB)
+13. **Services ↔ Redis**: For caching and pub/sub
 
 ### Development Commands
 

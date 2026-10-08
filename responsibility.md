@@ -63,17 +63,31 @@
 
 ### battle
 - **Responsible for**:
-  - Tic-tac-toe game state management
-  - Battle creation and matching
-  - Move validation and processing
-  - Win/draw detection
-  - Battle timeout handling
-  - Battle termination logic
-  - Battle list retrieval (GetMany)
-  - Battle entity lifecycle (init, update, leave, terminate)
+  - Battle history/read model: Get, GetMany retrieval
+  - Battle timeout sweep (admin operation)
+  - Battle termination (cancel/timeout)
+  - Consuming Kafka events: `battle.updated`, `battle.terminated`
+  - Maintaining read-only battle state in its own database
 - **NOT responsible for**:
-  - Authentication (handled by auth)
-  - User profile management (handled by profile)
+  - Battle creation and matching (handled by matchmaking)
+  - Move validation and processing (handled by engine)
+  - Win/draw detection (handled by engine)
+  - Real-time WebSocket events (handled by streaming)
+  - AI opponent logic (handled by bot)
+  - Engine domain rules (handled by engine)
+
+### matchmaking
+- **Responsible for**:
+  - Battle creation and initialization
+  - Matchmaking logic: find existing battle, join, or create new
+  - Publishing `matchmaking.matched` Kafka event when battle is matched
+  - Battle join logic
+  - Managing write-model battle state in its own database
+- **NOT responsible for**:
+  - Battle history/read operations (handled by battle)
+  - Move validation and processing (handled by engine)
+  - Win/draw detection (handled by engine)
+  - Battle timeout sweep (handled by battle)
   - Real-time WebSocket events (handled by streaming)
   - AI opponent logic (handled by bot)
   - Engine domain rules (handled by engine)
@@ -86,11 +100,13 @@
   - Move execution at domain level
   - State store integration (Redis cached state)
   - Battle domain events
+  - Publishing Kafka events: `battle.updated`, `battle.terminated` (after moves, timeouts, finishes)
 - **NOT responsible for**:
-  - Database persistence (handled by battle's Prisma repo)
-  - gRPC API contracts (handled by battle.proto)
+  - Database persistence (handled by battle's Prisma repo for read model)
+  - gRPC API contracts (handled by battle.proto / matchmaking.proto)
   - WebSocket communication (handled by streaming)
   - User authentication (handled by auth)
+  - Battle creation/matching (handled by matchmaking)
 
 ### streaming
 - **Responsible for**:
@@ -100,11 +116,15 @@
   - WebSocket connection lifecycle
   - Battle stream subscription management
   - Real-time battle state synchronization
+  - **Before match**: calls `matchmaking.Init()` for battle creation/join
+  - **After match**: calls `battle.Get()` / `battle.GetMany()` for battle state
 - **NOT responsible for**:
-  - Game logic or battle state (handled by battle + engine)
+  - Game logic or battle state (handled by engine + battle read model)
   - Authentication (handled by auth)
   - Profile data management (handled by profile)
-  - Move validation (handled by battle)
+  - Move validation (handled by engine)
+  - Battle creation/matching (handled by matchmaking)
+  - Battle history/read operations (handled by battle)
 
 ### bot
 - **Responsible for**:

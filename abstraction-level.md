@@ -24,7 +24,8 @@ This project operates at the **microservices architecture** level with **gRPC** 
 - **Sub-layers**:
   - **auth service**: Authentication, authorization, tokens, sessions
   - **profile service**: User profiles, ratings, levels, statistics
-  - **battle service**: Tic-tac-toe game state, moves, matching
+  - **matchmaking service**: Battle creation, matchmaking, join logic (write model)
+  - **battle service**: Battle history/read model: Get, GetMany, TimeoutSweep (read model)
   - **engine service**: Domain-level battle logic, battle domain model
   - **streaming service**: Real-time WebSocket event broadcasting
   - **orchestration service**: Generic method routing proxy
@@ -55,7 +56,7 @@ This project operates at the **microservices architecture** level with **gRPC** 
 The project boundary encompasses:
 
 **Included:**
-- All microservices (gateway, auth, profile, orchestration, battle, engine, streaming, bot, pgbouncer, redis, kafka)
+- All microservices (gateway, auth, profile, orchestration, matchmaking, battle, engine, streaming, bot, pgbouncer, redis, kafka)
 - Shared modules (logger, errors, kafka-manager, grpc-client-manager, pg-boss-manager)
 - Proto definitions in `infra/proto/`
 - Kubernetes manifests in `infra/k8s/`
@@ -73,15 +74,15 @@ The project boundary encompasses:
 
 #### gRPC Integration
 - **Definition**: Protocol Buffers contracts in `infra/proto/`
-- **Services**: auth, battle, profile, orchestration, streaming
+- **Services**: auth, matchmaking, battle, profile, orchestration, streaming
 - **Pattern**: All inter-service communication via gRPC
 - **Code generation**: `ts-proto` generates TypeScript from .proto
 
 #### Data Integration
-- **PostgreSQL**: Source of truth for all persistent data
-- **Prisma ORM**: Type-safe queries and migrations
-- **Redis**: Cache with TTL-based expiration
-- **Kafka**: Event topics for battle state changes
+- **PostgreSQL**: Source of truth (separate DB per service: matchmaking write, battle read)
+- **Prisma ORM**: Type-safe queries and migrations (per-service schemas)
+- **Redis**: Cache with TTL-based expiration (engine battle state)
+- **Kafka**: Event topics for battle state changes (matchmaking.matched, battle.updated, battle.terminated)
 
 #### External Integration
 - **HTTP/gRPC gateway**: External client entry point
@@ -92,7 +93,7 @@ The project boundary encompasses:
 ### Dependency Abstraction
 
 ```
-High-level services (gateway, auth, profile, battle, streaming, bot)
+High-level services (gateway, auth, profile, matchmaking, battle, streaming, bot)
        ↓ depend on
 Lower-level infrastructure (db, cache, message broker, gRPC)
        ↓ depends on

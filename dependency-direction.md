@@ -5,14 +5,15 @@
 ### Internal Service Dependencies (Detailed)
 
 ```
-gateway → [auth, profile, orchestration, battle, streaming, engine]
+gateway → [auth, profile, orchestration, matchmaking, battle, streaming, engine]
 auth → (none - root service, foundational)
 profile → [auth]  -- validates tokens, retrieves user info
 orchestration → (none - proxy only, routes method calls)
-battle → [auth, profile, engine]  -- auth for token validation, profile for rating, engine for domain logic
-streaming → [battle, profile, auth]  -- battle state, profile data, auth for connection auth
-engine → [battle, profile, auth]  -- battle domain, profile data, auth for token checks
-bot → [battle, profile, auth]  -- AI needs battle state, profile data, auth for validated moves
+matchmaking → [auth, profile]  -- auth for token validation, profile for user info
+battle → [auth, profile]  -- auth for token validation, profile for rating (read model)
+streaming → [matchmaking, battle, profile, auth]  -- matchmaking for Init, battle for Get/GetMany, profile data, auth for connection auth
+engine → [battle, profile, auth]  -- battle domain (read model), profile data, auth for token checks
+bot → [battle, profile, auth]  -- AI needs battle state (read model), profile data, auth for validated moves
 ```
 
 ### Shared Module Dependencies (Expanded)
@@ -31,17 +32,17 @@ shared/errors
 shared/kafka-manager
   → (no dependencies - foundation module)
   ← depended on by: services that produce/consume Kafka events
-     (battle, orchestration, profile)
+     (battle, matchmaking, orchestration, profile)
 
 shared/grpc-client-manager
   → (no dependencies - foundation module)
   ← depended on by: services that make gRPC calls
-     (gateway, orchestration, bot, engine)
+     (gateway, orchestration, bot, engine, streaming)
 
 shared/pg-boss-manager
   → (no dependencies - foundation module)
   ← depended on by: services using pg-boss for job queue
-     (auth, orchestration, potentially battle for timeouts)
+     (auth, orchestration, battle, matchmaking)
 
 ### Dependency Rules (Expanded)
 
@@ -128,6 +129,7 @@ graph TD
         auth[auth]
         profile[profile]
         orchestration[orchestration]
+        matchmaking[matchmaking]
         battle[battle]
         engine[engine]
         streaming[streaming]
@@ -137,6 +139,7 @@ graph TD
     connections
         gateway --> shared/logger
         auth --> shared/logger
+        matchmaking --> shared/logger
         battle --> shared/logger
         bot --> shared/logger
         profile --> shared/logger
@@ -145,6 +148,7 @@ graph TD
 
         gateway --> shared/errors
         auth --> shared/errors
+        matchmaking --> shared/errors
         battle --> shared/errors
         bot --> shared/errors
         profile --> shared/errors
@@ -155,12 +159,16 @@ graph TD
         orchestration --> shared/grpc-client-manager
         bot --> shared/grpc-client-manager
         engine --> shared/grpc-client-manager
+        streaming --> shared/grpc-client-manager
 
         battle --> shared/kafka-manager
+        matchmaking --> shared/kafka-manager
         orchestration --> shared/kafka-manager
 
         auth --> shared/pg-boss-manager
         orchestration --> shared/pg-boss-manager
+        battle --> shared/pg-boss-manager
+        matchmaking --> shared/pg-boss-manager
 ```
 
 ### Import Restrictions (Enforced)
@@ -171,9 +179,10 @@ graph TD
 - **auth**: `@shared/logger`, `@shared/errors`, no shared grpc-client-manager (foundational), prisma types
 - **profile**: `@shared/logger`, `@shared/errors`, `@shared/grpc-client-manager`, proto imports from auth
 - **orchestration**: `@shared/logger`, `@shared/errors`, proto imports, service repos (db, message, job)
-- **battle**: `@shared/logger`, `@shared/errors`, `@shared/kafka-manager`, `@shared/pg-boss-manager`, proto imports, engine service
+- **matchmaking**: `@shared/logger`, `@shared/errors`, `@shared/kafka-manager`, `@shared/pg-boss-manager`, proto imports (battle, auth, profile)
+- **battle**: `@shared/logger`, `@shared/errors`, `@shared/kafka-manager`, `@shared/pg-boss-manager`, proto imports
 - **engine**: `@shared/logger`, `@shared/errors`, proto imports, battle service repo, cache service
-- **streaming**: `@shared/logger`, `@shared/errors`, proto imports from battle/profile/auth
+- **streaming**: `@shared/logger`, `@shared/errors`, `@shared/grpc-client-manager`, proto imports from matchmaking/battle/profile/auth
 - **bot**: `@shared/logger`, `@shared/errors`, proto imports from battle, profile, auth
 
 **Forbidden imports**:

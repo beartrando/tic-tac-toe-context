@@ -21,7 +21,8 @@
 - [auth](services/auth/structure.md) - Auth service
 - [profile](services/profile/structure.md) - Profile service
 - [orchestration](services/orchestration/structure.md) - Orchestration service
-- [battle](services/battle/structure.md) - Battle service
+- [matchmaking](services/matchmaking/structure.md) - Matchmaking service (write model)
+- [battle](services/battle/structure.md) - Battle service (read model)
 - [streaming](services/streaming/structure.md) - Streaming service
 - [bot](services/bot/structure.md) - Bot service
 - [shared](services/structure.md) - Shared modules
