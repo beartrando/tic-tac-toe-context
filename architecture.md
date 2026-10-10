@@ -16,10 +16,10 @@
 | orchestration | tic-tac-toe-orchestration | kafka, pgbouncer | 50051 | оркестрация сценариев, rpc Proxy |
 | battle | tic-tac-toe-battle | kafka, pgbouncer | 50051 | бои: Get, GetMany, Init, Leave |
 | engine | tic-tac-toe-engine | kafka, pgbouncer, redis | 50051 | движок игры, bidi-стрим BattleChannel |
+| matchmaking | tic-tac-toe-matchmaking | kafka, pgbouncer | 50051 | создание/join баттлов, матчинг (issue #75, выделен из battle) |
 | bot | tic-tac-toe-bot | pgbouncer | 50051 | бот-игрок |
 | streaming | tic-tac-toe-streaming | — | HTTP 8080 | стриминг данных клиентам |
 | front | tic-tac-toe-front | — | — | Flutter-клиент |
-| matchmaking | matchmaking | — | 50051 | шаблон для новых сервисов |
 
 ## Инфраструктура (docker-compose)
 
