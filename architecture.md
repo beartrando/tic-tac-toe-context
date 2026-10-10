@@ -14,9 +14,9 @@
 | auth | tic-tac-toe-auth | kafka, pgbouncer | gRPC 50051 | сессии/токены: Logout, RefreshTokens, AnonymousSignIn, Get |
 | profile | tic-tac-toe-profile | kafka, pgbouncer | 50051 | профили: GetByUser, Get, GetOrCreate |
 | orchestration | tic-tac-toe-orchestration | kafka, pgbouncer | 50051 | оркестрация сценариев, rpc Proxy |
-| battle | tic-tac-toe-battle | kafka, pgbouncer | 50051 | бои: Get, GetMany, Init, Leave |
+| battle | tic-tac-toe-battle | kafka, pgbouncer | 50051 | бои: Get, GetMany, Leave |
 | engine | tic-tac-toe-engine | kafka, pgbouncer, redis | 50051 | движок игры, bidi-стрим BattleChannel |
-| matchmaking | tic-tac-toe-matchmaking | kafka, pgbouncer | 50051 | создание/join баттлов, матчинг (issue #75, выделен из battle) |
+| matchmaking | tic-tac-toe-matchmaking | kafka, pgbouncer | 50051 | баттлы: Init (создание/join, матчинг), владеет battles в БД matchmaking (issue #75, выделен из battle) |
 | bot | tic-tac-toe-bot | pgbouncer | 50051 | бот-игрок |
 | streaming | tic-tac-toe-streaming | — | HTTP 8080 | стриминг данных клиентам |
 | front | tic-tac-toe-front | — | — | Flutter-клиент |
@@ -66,6 +66,6 @@ src/
 
 ## proto-контракты (`proto/`, репозиторий tic-tac-toe-proto)
 
-`auth.proto`, `battle.proto`, `engine.proto`, `orchestration.proto`, `profile.proto`,
+`auth.proto`, `battle.proto`, `engine.proto`, `matchmaking.proto`, `orchestration.proto`, `profile.proto`,
 `streaming.proto`, `common/{empty,ping,health,error,response,key_value}.proto`.
 Генерация: `make proto-generate` (ts-proto для Node в `src/contracts/proto`, dart для front).
