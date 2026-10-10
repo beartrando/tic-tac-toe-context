@@ -1,0 +1,45 @@
+# Workflow AI-агента и git
+
+## Этапы работы (docs/workflow/script.md)
+
+1. **0.0 Контекст** — изучить Workflow + Context, похожие сервисы, proto, тесты, паттерны;
+   выдать понимание архитектуры и вопросы оператору.
+2. **0.1 ТЗ** — требования, issue; понятие задачи, переиспользуемое, противоречия, вопросы.
+3. **1 Понимание задачи** — ответственность, входы/выходы, сценарии, ограничения, ошибки.
+4. **2 Алгоритм** — пошагово по сценариям: действия, проверки, состояние, ошибки, edge cases.
+5. **3 Структура файлов** — дерево + ответственность каждого файла (reference — соседние сервисы).
+6. **4 Реализация** — только согласованное; затем typecheck + build; отчёт и **стоп**.
+7. **5 Тесты** — unit-тесты: happy path, валидация, ошибки, edge cases.
+
+Правила (docs/workflow/context.md): изменения в `docs/context` делаются свободно;
+issue поддерживается в актуальном состоянии максимально лаконично; перед завершением — тесты.
+Метка `to_workflow` — «добавить изменение в workflow».
+
+## Структура репозиториев
+
+- Монорепо `infra` хранит gitlinks (mode 160000) всех субмодулей.
+- Отдельные репозитории `beartrando/*`: все сервисы, `proto`, `make`, `shared/*`,
+  `docs/context`, `docs/wiki`, `docs/workflow`.
+- Список репо для git-операций: `GIT_SERVICES` + `GIT_EXTRA_REPOS` (make/git.mk).
+
+## Конвенции git
+
+- Ветка: `feature-<ID issue>-<описание>` (ID извлекается `make git-create-prs`).
+- PR: в `dev`, title = имя ветки, body с `Related issue: #<ID>`.
+- Коммит делается в том субмодуле, где изменён код; монорепо коммитит сдвиг gitlink'ов.
+
+## make git-* команды
+
+| target | что делает |
+|---|---|
+| `git-check-dev` | проверка: все репо на `dev` и worktree чист |
+| `git-list-prs` | открытые PR по всем репо (gh) |
+| `git-create-prs` | branch → commit → push → PR в dev → комментарий в issue со ссылками |
+| `git-commit-all` / `git-push-all` / `git-commit-and-push-all` | коммит/пуш по всем репо (`COMMIT_MSG`) |
+| `git-pull-all` | checkout dev + pull --ff-only во всех репо (требует чистоты) |
+| `git-check-push-and-switch-dev` | проверит пуш, вернёт всё на dev |
+
+## Полезное
+
+- Главная доска проекта: https://github.com/users/beartrando/projects/2 (docs/wiki/notions.md).
+- `make install` перед первым запуском: создаёт `.env`, compose, генерирует proto.
