@@ -19,7 +19,7 @@
 | bot | tic-tac-toe-bot | pgbouncer | 50051 | бот-игрок |
 | streaming | tic-tac-toe-streaming | — | HTTP 8080 | стриминг данных клиентам |
 | front | tic-tac-toe-front | — | — | Flutter-клиент |
-| service-template | service-template | — | 50051 | шаблон для новых сервисов |
+| matchmaking | matchmaking | — | 50051 | шаблон для новых сервисов |
 
 ## Инфраструктура (docker-compose)
 
@@ -55,7 +55,7 @@ src/
 ```
 
 - Тесты: jest, `*.spec.ts` рядом с кодом (`pnpm test`).
-- Prisma-сервисы: auth, battle, bot, engine, orchestration, profile, service-template, streaming.
+- Prisma-сервисы: auth, battle, bot, engine, orchestration, profile, matchmaking, streaming.
 
 ## shared-модули (`shared/*`, все — субмодули beartrando/*)
 

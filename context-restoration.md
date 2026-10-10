@@ -14,7 +14,7 @@
    workflow-and-git, gotchas.
 4. **Инфраструктура**: `docker-compose.yml` (+ `docker-compose.yml.dist`, `.deploy.dist`),
    `.env.dist`, `.gitmodules`, `k8s/`, `.github/workflows/`.
-5. **Код**: `services/service-template` и `services/gateway` как reference-реализации;
+5. **Код**: `services/matchmaking` и `services/gateway` как reference-реализации;
    `shared/*` — общие библиотеки; `proto/` — контракты.
 6. **Текущее состояние**: `git status --short --branch`, `git submodule status`.
 
