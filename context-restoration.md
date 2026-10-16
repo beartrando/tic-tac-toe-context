@@ -8,8 +8,7 @@
 
 1. **Корень монорепо**: `README.md` (ссылается на docs), `package.json`, `pnpm-workspace.yaml`,
    `turbo.json`, `Makefile`, `make/main.mk`, `make/git.mk`.
-2. **Документация процесса**: `docs/workflow/context.md`, `docs/workflow/script.md`,
-   `docs/workflow/notions.md`, `docs/wiki/notions.md`.
+2. **Документация процесса**: `docs/workflow/context.md`, `docs/wiki/notions.md`.
 3. **Этот репозиторий** (`docs/context`): все файлы — architecture, build-and-deploy,
    workflow-and-git, gotchas.
 4. **Инфраструктура**: `docker-compose.yml` (+ `docker-compose.yml.dist`, `.deploy.dist`),
@@ -24,6 +23,8 @@
 - Смешанная регистрация субмодулей (standalone-репозитории vs классические gitfile) — см. `gotchas.md`.
 - `.env` файлы сервисов создаются из `.env.dist` только через `make install`.
 - Если контекст неполон или противоречив — задать вопрос оператору (этап 0.0 workflow).
+- AI-агент не выполняет git-операции (commit/push/branch/merge/checkout) — это зона сервиса
+  `devorc`; агент только читает состояние. См. `workflow-and-git.md`.
 
 ## Быстрая проверка готовности
 
