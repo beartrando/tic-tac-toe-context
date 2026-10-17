@@ -31,5 +31,16 @@
 - Сгенерированные `src/contracts/proto` и prisma-клиент не закоммичены. Перед сборкой
   сервиса их нужно сгенерировать (`make proto-generate`, `make prisma-generate`), иначе
   `pnpm --filter <svc> build` падает на отсутствующих типах (напр. `TracedBattle`, `PrismaClient`).
+- Prisma-клиент в монорепо **общий**: одинаковые версии `@prisma/client`/`prisma` дедуплицируются
+  pnpm в один экземпляр в `node_modules/.pnpm/...`, и `prisma generate` пишет в единственный
+  `node_modules/.pnpm/.../node_modules/.prisma`. Поэтому при локальной сборке нескольких
+  prisma-сервисов `prisma:generate` нужно запускать **непосредственно перед** сборкой каждого
+  сервиса (`prisma:generate && build`), иначе клиент будет от схемы последнего сгенерированного
+  сервиса (ошибки вида `Property 'x' does not exist on type 'PrismaClient'`). В Docker каждый
+  сервис собирается в своём контексте — там проблемы нет.
 - `shared/elastic` — обычный workspace-пакет (не субмодуль), создан локально; отдельный
   репозиторий/субмодуль `beartrando/elastic` пока не заведён.
+- Транспортное логирование в ES (`MessageLogger`, индекс `service-messages`) подключено в
+  engine, battle, bot, streaming. Kafka in — обёртка в `MessageService.createConsumers`, Kafka out —
+  `JobService.enqueue` (пишутся только топики из producers-конфига, т.е. реально уезжающие в Kafka;
+  внутренние pg-boss очереди не логируются). Health-трафик и heartbeat-пинги намеренно пропускаются.

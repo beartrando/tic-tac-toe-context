@@ -46,6 +46,14 @@
   операцию с полями `@timestamp`, `service`, `operation`, `track_id`, `request` (что пришло)
   и `response` (как обработано: `success`, `terminated`, `battle`, `error`). Запись
   fire-and-forget: ошибка ES только логируется и не ломает операцию.
+- Транспортные сообщения (все сервисы, `MessageLogger` из `@shared/elastic`) — каждое входящее
+  и исходящее сообщение сервиса пишется в единый индекс `service-messages` (`ELASTIC_MESSAGES_INDEX`):
+  один документ на сообщение с полями `@timestamp`, `service`, `direction` (`in`/`out`),
+  `transport` (`kafka`/`grpc`/`websocket`/`http`), `channel` (топик / gRPC-путь / ws-route / `METHOD /path`),
+  `track_id`, `payload`. Точки: Kafka in/out — `MessageService`/`JobService` (только Kafka-топики из
+  producers-конфига), gRPC in — обработчики, gRPC out — стрим-контейнер (engine) и клиенты (streaming),
+  WS in/out — streaming-сервер и ws-клиент bot, HTTP in/out — http-клиент bot. Health-трафик и
+  heartbeat-пинги не логируются.
 
 ## Шаблон сервиса (Node/TS)
 
@@ -69,7 +77,8 @@ src/
 
 `cache-store`, `elastic`, `errors`, `grpc-client-manager`, `kafka-manager`, `logger`,
 `pg-boss-manager`, `state-store`, `timer`.
-`elastic` — тонкая обёртка над `@elastic/elasticsearch` (`ElasticService`), создан локально
+`elastic` — тонкая обёртка над `@elastic/elasticsearch` (`ElasticService`) + `MessageLogger`
+(транспортные in/out документы), создан локально
 как workspace-пакет; отдельный репозиторий/субмодуль заводится отдельно.
 В корневом `pnpm-workspace.yaml` все `@shared/*` зафиксированы как `workspace:*`
 (override'ы внутри субмодулей игнорируются).
