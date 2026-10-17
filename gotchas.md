@@ -28,3 +28,8 @@
 - Свежий клон: `docs/context` пуст — сначала восстанавливается/инициализируется вручную.
 - `make reset` останавливает и удаляет **все** контейнеры и volumes на машине, не только проекта.
 - turbo-кэш и логи сборки лежат в `services/*/.turbo/`.
+- Сгенерированные `src/contracts/proto` и prisma-клиент не закоммичены. Перед сборкой
+  сервиса их нужно сгенерировать (`make proto-generate`, `make prisma-generate`), иначе
+  `pnpm --filter <svc> build` падает на отсутствующих типах (напр. `TracedBattle`, `PrismaClient`).
+- `shared/elastic` — обычный workspace-пакет (не субмодуль), создан локально; отдельный
+  репозиторий/субмодуль `beartrando/elastic` пока не заведён.
