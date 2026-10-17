@@ -25,7 +25,10 @@
 
 - postgres 17.6 (:5432), edoburu/pgbouncer (пулинг), apache/kafka 4.1.1 (:9092),
   redis 7.2, provectuslabs/kafka-ui.
-- Volumes: `postgres_data`, `kafka_data`. Сеть `backend` (bridge).
+- elasticsearch 8.15.0 (:9200) + kibana 8.15.0 (:5601) — ES single-node, security выключен
+  (`xpack.security.enabled=false`), Kibana поднимается после healthy ES. Порт наружу
+  закомментирован; доступ из сервисов по имени `elasticsearch`.
+- Volumes: `postgres_data`, `kafka_data`, `elasticsearch_data`. Сеть `backend` (bridge).
 - Контейнеры: `ttt-<service>`; команда dev: `pnpm dlx turbo run dev --parallel --filter <svc>`;
   монтируются `src/` и `package.json` сервиса.
 
@@ -38,6 +41,11 @@
 - pg-boss (`@shared/pg-boss-manager`) — очереди/фоновые задачи в postgres.
 - Redis — используется engine.
 - `@shared/state-store`, `@shared/cache-store` — состояние/кэш.
+- Elasticsearch (`@shared/elastic`) — запись документов в ES. Engine складывает все операции
+  по баттлу (всё, что несёт `track_id`) в индекс `battle-operations`: один документ на
+  операцию с полями `@timestamp`, `service`, `operation`, `track_id`, `request` (что пришло)
+  и `response` (как обработано: `success`, `terminated`, `battle`, `error`). Запись
+  fire-and-forget: ошибка ES только логируется и не ломает операцию.
 
 ## Шаблон сервиса (Node/TS)
 
@@ -59,8 +67,10 @@ src/
 
 ## shared-модули (`shared/*`, все — субмодули beartrando/*)
 
-`cache-store`, `errors`, `grpc-client-manager`, `kafka-manager`, `logger`,
+`cache-store`, `elastic`, `errors`, `grpc-client-manager`, `kafka-manager`, `logger`,
 `pg-boss-manager`, `state-store`, `timer`.
+`elastic` — тонкая обёртка над `@elastic/elasticsearch` (`ElasticService`), создан локально
+как workspace-пакет; отдельный репозиторий/субмодуль заводится отдельно.
 В корневом `pnpm-workspace.yaml` все `@shared/*` зафиксированы как `workspace:*`
 (override'ы внутри субмодулей игнорируются).
 
